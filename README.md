@@ -11,6 +11,30 @@ Vote Sathi is a premium, mobile-first web application designed to bridge the gap
 
 ---
 
+## 🎖️ Evaluation Highlights
+To meet the highest standards of the hackathon, we focused on the following areas:
+
+### 1. Code Quality & Maintainability
+- **TypeScript:** Used throughout the project for static type checking and reducing runtime errors.
+- **Component-Based Architecture:** Modular UI components (Buttons, Cards, Modals) for high reusability.
+- **State Management:** Used React Context API for clean and efficient handling of Authentication and Language states.
+
+### 2. Security & Responsible AI
+- **Secure Authentication:** Implemented Firebase Auth with Google Provider.
+- **AI Guardrails:** Custom system prompts for Gemini Pro 1.5 to prevent hallucinations and ensure responses are strictly restricted to Indian Election guidelines.
+- **Environment Safety:** Built to handle sensitive API keys via environment variables.
+
+### 3. Efficiency & Performance
+- **Optimized Build:** Powered by Vite for lightning-fast bundling and HMR.
+- **Perceived Performance:** Integrated premium skeleton loaders to provide a smooth user experience during data fetching.
+- **Lightweight Containers:** Docker image optimized with `nginx:alpine` to ensure minimal footprint on Cloud Run.
+
+### 4. Accessibility & Inclusive Design
+- **Neo-Brutalist UI:** High-contrast color palettes and bold typography to ensure readability for users with varying visual needs.
+- **Multi-lingual Support:** Native support for English, Hindi, and Bengali to include non-English speaking citizens.
+
+---
+
 ## 🎯 Chosen Vertical
 **Civic Engagement & Election Education**
 The project focuses on making complex election procedures accessible to every citizen, regardless of their tech-savviness or language barriers.
