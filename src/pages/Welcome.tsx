@@ -8,7 +8,7 @@ export const Welcome = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-dvh bg-neo-bg flex flex-col items-center justify-between p-10 relative overflow-y-auto">
+    <div className="min-h-dvh bg-neo-bg flex flex-col items-center justify-between p-10 pb-20 relative overflow-y-auto">
       {/* Static Logo Section */}
       <div className="flex-1 flex flex-col items-center justify-center w-full">
         <div className="relative mb-10">
@@ -28,7 +28,7 @@ export const Welcome = () => {
         </div>
 
       {/* CTA Section */}
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-6 mb-12">
 
         <Button 
           className="w-full flex items-center justify-between px-8 bg-neo-green text-2xl py-6 rounded-2xl border-4"
