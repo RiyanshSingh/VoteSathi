@@ -1,35 +1,42 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { SectionWrapper } from '../components/SectionWrapper';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
-import { Bell, Shield, Eye, Globe, Moon, Smartphone } from 'lucide-react';
+import { PageSkeleton } from '../components/SkeletonLoader';
+import { Bell, Shield, Eye, Globe, Moon, Smartphone, Loader2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useSettings } from '../context/SettingsContext';
+import { useState } from 'react';
 
 export const Settings = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
-  
-  const [notifications, setNotifications] = useState({
-    push: true,
-    email: false,
-    news: true,
-    reminders: true
-  });
+  const { 
+    notifications, 
+    preferences, 
+    updateNotifications, 
+    updatePreferences, 
+    saveSettings,
+    loading 
+  } = useSettings();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const [preferences, setPreferences] = useState({
-    darkMode: false,
-    highContrast: false,
-    hapticFeedback: true,
-    incognitoMode: false
-  });
+  if (loading) {
+    return <PageSkeleton />;
+  }
 
-  const toggleNotification = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const togglePreference = (key: keyof typeof preferences) => {
-    setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
+  const handleSave = async () => {
+    setIsSaving(true);
+    const success = await saveSettings();
+    setIsSaving(false);
+    
+    if (success) {
+      alert(t('common.saveSuccess'));
+      navigate('/profile');
+    } else {
+      alert("Failed to save settings. Please try again.");
+    }
   };
 
   const SettingToggle = ({ label, description, icon: Icon, active, onClick, color = "bg-neo-blue" }: any) => (
@@ -65,7 +72,7 @@ export const Settings = () => {
             description={t('settings.pushDesc')} 
             icon={Bell} 
             active={notifications.push}
-            onClick={() => toggleNotification('push')}
+            onClick={() => updateNotifications({ push: !notifications.push })}
             color="bg-neo-pink"
           />
           <SettingToggle 
@@ -73,7 +80,7 @@ export const Settings = () => {
             description={t('settings.newsDesc')} 
             icon={Globe} 
             active={notifications.news}
-            onClick={() => toggleNotification('news')}
+            onClick={() => updateNotifications({ news: !notifications.news })}
             color="bg-neo-yellow"
           />
           <SettingToggle 
@@ -81,7 +88,7 @@ export const Settings = () => {
             description={t('settings.remindersDesc')} 
             icon={Smartphone} 
             active={notifications.reminders}
-            onClick={() => toggleNotification('reminders')}
+            onClick={() => updateNotifications({ reminders: !notifications.reminders })}
             color="bg-neo-purple"
           />
         </div>
@@ -95,7 +102,7 @@ export const Settings = () => {
             description={t('settings.hapticDesc')} 
             icon={Shield} 
             active={preferences.hapticFeedback}
-            onClick={() => togglePreference('hapticFeedback')}
+            onClick={() => updatePreferences({ hapticFeedback: !preferences.hapticFeedback })}
             color="bg-neo-blue"
           />
           <SettingToggle 
@@ -103,7 +110,7 @@ export const Settings = () => {
             description={t('settings.contrastDesc')} 
             icon={Eye} 
             active={preferences.highContrast}
-            onClick={() => togglePreference('highContrast')}
+            onClick={() => updatePreferences({ highContrast: !preferences.highContrast })}
             color="bg-neo-green"
           />
           <SettingToggle 
@@ -111,7 +118,7 @@ export const Settings = () => {
             description={t('settings.darkDesc')} 
             icon={Moon} 
             active={preferences.darkMode}
-            onClick={() => togglePreference('darkMode')}
+            onClick={() => updatePreferences({ darkMode: !preferences.darkMode })}
             color="bg-gray-200"
           />
         </div>
@@ -121,12 +128,11 @@ export const Settings = () => {
         <Button 
           variant="primary" 
           fullWidth 
-          onClick={() => {
-            alert(t('settings.save') + " successfully!");
-            navigate('/profile');
-          }}
-          className="bg-black text-white hover:bg-gray-800"
+          onClick={handleSave}
+          disabled={isSaving}
+          className="bg-black text-white hover:bg-gray-800 flex items-center justify-center gap-2"
         >
+          {isSaving ? <Loader2 className="animate-spin" size={20} /> : null}
           {t('settings.save')}
         </Button>
       </SectionWrapper>

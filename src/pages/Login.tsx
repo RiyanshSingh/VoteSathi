@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { auth } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { Button } from '../components/Button';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -12,7 +12,14 @@ export const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
+
+  const getAuthErrorMessage = (err: any) => {
+    const code = err?.code as string | undefined;
+    if (!code) return t('auth.generic');
+    return t(code) !== code ? t(code) : t('auth.generic');
+  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -20,7 +27,7 @@ export const Login = () => {
       await signInWithPopup(auth, provider);
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      setError(getAuthErrorMessage(err));
     }
   };
 
@@ -31,16 +38,19 @@ export const Login = () => {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        if (name.trim()) {
+          await updateProfile(userCredential.user, { displayName: name.trim() });
+        }
       }
       navigate('/');
     } catch (err: any) {
-      setError(err.message);
+      setError(getAuthErrorMessage(err));
     }
   };
 
   return (
-    <div className="h-screen bg-neo-bg flex flex-col p-6 relative">
+    <div className="min-h-dvh bg-neo-bg flex flex-col p-6 relative overflow-y-auto">
       <button 
         onClick={() => navigate('/welcome')}
         className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border-3 border-black shadow-neo-sm text-black active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all mb-6 shrink-0 z-10"
@@ -65,6 +75,21 @@ export const Login = () => {
         )}
 
         <form onSubmit={handleEmailAuth} className="flex flex-col gap-4 mb-6">
+          {!isLogin && (
+            <div>
+              <label className="block font-black uppercase text-sm mb-2 ml-1">
+                {t('login.name') !== 'login.name' ? t('login.name') : 'Full Name'}
+              </label>
+              <input 
+                type="text" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-14 px-5 rounded-2xl bg-white border-3 border-black text-black font-bold focus:outline-none focus:shadow-neo transition-all shadow-neo-sm"
+                placeholder={t('login.namePlaceholder') !== 'login.namePlaceholder' ? t('login.namePlaceholder') : 'Enter your full name'}
+                required={!isLogin}
+              />
+            </div>
+          )}
           <div>
             <label className="block font-black uppercase text-sm mb-2 ml-1">{t('login.email')}</label>
             <input 
@@ -72,7 +97,7 @@ export const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full h-14 px-5 rounded-2xl bg-white border-3 border-black text-black font-bold focus:outline-none focus:shadow-neo transition-all shadow-neo-sm"
-              placeholder="you@example.com"
+              placeholder={t('login.emailPlaceholder')}
               required
             />
           </div>

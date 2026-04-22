@@ -9,17 +9,13 @@ import { Welcome } from './pages/Welcome';
 import { Login } from './pages/Login';
 import { Settings } from './pages/Settings';
 import { useAuth } from './context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { PageSkeleton } from './components/SkeletonLoader';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="h-screen bg-neo-bg flex items-center justify-center">
-        <Loader2 className="animate-spin text-black" size={48} strokeWidth={3} />
-      </div>
-    );
+    return <PageSkeleton />;
   }
   
   if (!user) {
@@ -33,11 +29,7 @@ const PublicRoute = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="h-screen bg-neo-bg flex items-center justify-center">
-        <Loader2 className="animate-spin text-black" size={48} strokeWidth={3} />
-      </div>
-    );
+    return <PageSkeleton />;
   }
   
   if (user) {

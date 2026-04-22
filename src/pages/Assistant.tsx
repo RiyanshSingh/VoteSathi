@@ -1,18 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { ChatBubble } from '../components/ChatBubble';
 import { Chip } from '../components/Chip';
+import { PageSkeleton } from '../components/SkeletonLoader';
 import { Button } from '../components/Button';
-import { Send, Loader2 } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
-import { collection, doc, getDoc, setDoc, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { Send } from 'lucide-react';
+import { getLanguageLocale, useLanguage } from '../context/LanguageContext';
+import { collection, doc, getDoc, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 import { aiKnowledge } from '../data/aiKnowledge';
+import { getCanonicalSuggestionChip } from '../lib/contentLocalization';
+import { suggestionChips as fallbackChips, initialMessages } from '../data/mockData';
+
+// AI model logic - Using client-side Gemini to support Spark plan (free)
+const genAI = new GoogleGenerativeAI("AIzaSyA3JFwbsCZ8d-Wo4WB4LwPXuzmtxPuMDKo");
 
 export const Assistant = () => {
   const { language, t } = useLanguage();
@@ -26,31 +33,51 @@ export const Assistant = () => {
   const hasSentInitialQuery = useRef(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isFirstLoad = useRef(true);
 
-  // Initialize Google AI with the same API key
-  const genAI = new GoogleGenerativeAI("AIzaSyDsZ2UXZ0xsMY2Ij6PlSDNNk0g78dPBDS4");
-  const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
-    systemInstruction: `You are Vote Sathi AI, an election expert. Response language: ${language}. Current language context: ${language}.`
-  });
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const model = useMemo(() => genAI.getGenerativeModel({ 
+    model: "gemini-flash-latest",
+    systemInstruction: `You are Vote Sathi AI, a helpful and informative election consultant for Indian Elections.
+    Your goal is to provide clear, accurate, and easy-to-understand answers.
+    - Do not use conversational filler or introductory phrases.
+    - Provide 3-4 well-explained bullet points with **bold** highlights.
+    - Keep your answer under 150 words.
+    - CRITICAL: You must ONLY answer questions related to the Indian Election Commission, voting process, political system, or election rules.
+    - CRITICAL: If the user asks something completely unrelated to elections, say: "I can only answer questions related to the Indian election process."
+    Always respond in: ${language}.`,
+    generationConfig: {
+      maxOutputTokens: 800,
+      temperature: 0.1,
+    }
+  }), [language]);
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      if (isFirstLoad.current) {
+        // Instant scroll on first load to show only the last messages
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        isFirstLoad.current = false;
+      } else {
+        // Smooth scroll only for new messages or when typing
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   }, [messages, isTyping]);
 
   useEffect(() => {
     const fetchChips = async () => {
       try {
         const docSnap = await getDoc(doc(db, 'config', 'assistant'));
-        if (docSnap.exists()) {
+        if (docSnap.exists() && docSnap.data().suggestionChips?.length > 0) {
           setChips(docSnap.data().suggestionChips);
+        } else {
+          // Fallback to canonical chips from mockData
+          setChips(fallbackChips);
         }
       } catch (error) {
         console.error("Error fetching chips:", error);
+        // Always show chips even when offline or config is missing
+        setChips(fallbackChips);
       }
     };
     fetchChips();
@@ -60,10 +87,27 @@ export const Assistant = () => {
         collection(db, `users/${user.uid}/messages`),
         orderBy('createdAt', 'asc')
       );
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      const unsubscribe = onSnapshot(q, async (snapshot) => {
         const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setMessages(msgs);
-        setLoading(false);
+        
+        // If user has no message history, seed the welcome greeting
+        if (msgs.length === 0) {
+          const welcomeMsg = initialMessages[0];
+          try {
+            await addDoc(collection(db, `users/${user.uid}/messages`), {
+              sender: 'assistant',
+              text: welcomeMsg.text,
+              createdAt: serverTimestamp(),
+              timestamp: welcomeMsg.timestamp,
+            });
+          } catch (e) {
+            console.error("Error seeding welcome message:", e);
+            setLoading(false); // Ensure loader disappears even if seed fails
+          }
+        } else {
+          setMessages(msgs);
+          setLoading(false);
+        }
       });
       return () => unsubscribe();
     } else {
@@ -71,14 +115,11 @@ export const Assistant = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTo({
-        top: chatContainerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }
-  }, [messages, isTyping]);
+  const getTimestamp = () =>
+    new Date().toLocaleTimeString(getLanguageLocale(language), {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   useEffect(() => {
     if (location.state?.query && !hasSentInitialQuery.current) {
@@ -98,7 +139,7 @@ export const Assistant = () => {
       sender: 'user',
       text: text,
       createdAt: serverTimestamp(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: getTimestamp(),
     };
 
     setInputValue('');
@@ -107,10 +148,10 @@ export const Assistant = () => {
     setIsTyping(true);
 
     // 1. Check Local Knowledge Base First (Keyword Matching)
-    const lowerText = text.toLowerCase();
+    const cleanText = text.trim().toLowerCase();
     const matchedTopic = aiKnowledge.find(item => {
       const langKeywords = item.keywords[language] || item.keywords['English'];
-      return langKeywords.some(keyword => lowerText.includes(keyword.toLowerCase()));
+      return langKeywords.some(keyword => cleanText.includes(keyword.toLowerCase().trim()));
     });
 
     if (matchedTopic) {
@@ -121,49 +162,43 @@ export const Assistant = () => {
           sender: 'assistant',
           text: localAnswer,
           createdAt: serverTimestamp(),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          timestamp: getTimestamp(),
         });
         setIsTyping(false);
       }, 1000);
       return;
     }
 
-    // 2. Fallback to AI API if no local match
+    // 2. Fallback to Client-side AI if no local match
     try {
-      // Prepare history for multi-turn chat (simple version)
-      const history = messages.slice(-10).map(m => ({
-        role: (m.sender === 'user' ? 'user' : 'model') as "user" | "model",
-        parts: [{ text: m.text }]
-      }));
+      // Prepare history for multi-turn chat
+      const history = messages
+        .filter(m => m.text && typeof m.text === 'string' && m.text.trim().length > 0)
+        .slice(-6)
+        .map(m => ({
+          role: (m.sender === 'user' ? 'user' : 'model') as "user" | "model",
+          parts: [{ text: m.text }]
+        }));
 
       const chat = model.startChat({ history });
-      const result = await chat.sendMessageStream(text);
+      const result = await chat.sendMessage(text);
+      const responseText = result.response.text();
       
-      let fullResponse = '';
-      const botMsgRef = await addDoc(collection(db, `users/${user.uid}/messages`), {
+      await addDoc(collection(db, `users/${user.uid}/messages`), {
         sender: 'assistant',
-        text: '',
+        text: responseText,
         createdAt: serverTimestamp(),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: getTimestamp(),
       });
-
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        fullResponse += chunkText;
-        // Update the document in Firestore with the partial response
-        await setDoc(botMsgRef, { text: fullResponse }, { merge: true });
-      }
     } catch (error: any) {
       console.error("AI Error:", error);
-      const fallbackMsg = language === 'Hindi (हिंदी)' 
-        ? "माफी चाहता हूँ, मैं अभी कनेक्ट नहीं कर पा रहा हूँ। कृपया दोबारा प्रयास करें!"
-        : "I'm having trouble connecting right now. Please try again in a moment!";
+      const fallbackMsg = t('assistant.connectionError');
         
       await addDoc(collection(db, `users/${user.uid}/messages`), {
         sender: 'assistant',
         text: fallbackMsg,
         createdAt: serverTimestamp(),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: getTimestamp(),
       });
     } finally {
       setIsTyping(false);
@@ -171,22 +206,17 @@ export const Assistant = () => {
   };
 
   if (loading) {
-    return (
-      <div className="h-screen bg-neo-bg flex items-center justify-center">
-        <Loader2 className="animate-spin text-black" size={48} strokeWidth={3} />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden relative">
+    <div className="h-full flex flex-col overflow-x-hidden relative">
       <Header title={t('assistant.title')} subtitle={t('assistant.subtitle')} />
 
       {/* Chat Area - Calculated height to fit perfectly between header and chips */}
       <div 
         ref={chatContainerRef}
-        className="flex-1 overflow-y-auto px-6 py-4 flex flex-col pt-4 overflow-hidden"
-        style={{ height: 'calc(100vh - 360px)' }}
+        className="flex-1 overflow-y-auto px-6 py-4 flex flex-col pt-4 overflow-x-hidden"
       >
         {messages.map((msg) => (
           <ChatBubble 
@@ -208,13 +238,21 @@ export const Assistant = () => {
       </div>
 
       {/* Fixed Bottom Section (Stays above navbar - Fully Transparent) */}
-      <div className="fixed bottom-[84px] left-1/2 -translate-x-1/2 w-full max-w-[1200px] min-[1200px]:max-w-[406px] pointer-events-none z-40 flex flex-col justify-end">
+      <div className="fixed bottom-[84px] inset-x-0 mx-auto w-full max-w-[1200px] min-[1200px]:max-w-[406px] pointer-events-none z-40 flex flex-col justify-end">
         <div className="bg-transparent pb-4">
           {/* Suggestions Bar */}
           <div className="px-6 py-3 overflow-x-auto no-scrollbar flex gap-3 pointer-events-auto">
-            {chips.map((chip) => (
-              <Chip key={chip} label={t(chip)} onClick={() => handleSendMessage(chip)} />
-            ))}
+            {chips.map((chip) => {
+              const chipKey = getCanonicalSuggestionChip(chip);
+              const localizedChip = t(chipKey);
+              return (
+                <Chip
+                  key={chip}
+                  label={localizedChip}
+                  onClick={() => handleSendMessage(localizedChip)}
+                />
+              );
+            })}
           </div>
 
           {/* Input Bar */}

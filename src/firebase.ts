@@ -3,7 +3,6 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import { getAI, getGenerativeModel, GoogleAIBackend } from "firebase/ai";
 import { getFunctions } from "firebase/functions";
 
 // Your web app's Firebase configuration
@@ -24,7 +23,4 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const functions = getFunctions(app);
 
-// Initialize AI Logic
-const ai = getAI(app, { backend: new GoogleAIBackend() });
-
-export { app, analytics, db, auth, functions, ai, getGenerativeModel };
+export { app, analytics, db, auth, functions };

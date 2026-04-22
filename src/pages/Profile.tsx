@@ -2,8 +2,9 @@ import { Header } from '../components/Header';
 import { SectionWrapper } from '../components/SectionWrapper';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
+import { PageSkeleton } from '../components/SkeletonLoader';
 import { Settings, Bookmark, Star, ChevronRight, Bell } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
+import { LANGUAGE_OPTIONS, useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -11,10 +12,56 @@ import { seedDatabase } from '../lib/db-seed';
 
 import { useNavigate } from 'react-router-dom';
 
+import { useState, useEffect } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+
 export const Profile = () => {
   const { language, setLanguage, t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [realStats, setRealStats] = useState({
+    topicsCompleted: 0,
+    stepsLearned: 0,
+    overallProgress: 0
+  });
+  const [savedItems, setSavedItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+      try {
+        // 1. Fetch Progress Stats - Optimized: query only current user's docs
+        const progressQ = query(collection(db, 'userProgress'), where('uid', '==', user.uid));
+        const progressSnap = await getDocs(progressQ);
+        const userProgress = progressSnap.docs.map(doc => doc.data());
+
+        const completed = userProgress.filter(p => p.progress === 100).length;
+        const steps = userProgress.reduce((sum, p) => sum + (p.lastStepIndex + 1), 0);
+        const avgProgress = userProgress.length > 0 
+          ? Math.round(userProgress.reduce((sum, p) => sum + p.progress, 0) / 4)
+          : 0;
+
+        setRealStats({
+          topicsCompleted: completed,
+          stepsLearned: steps,
+          overallProgress: avgProgress
+        });
+
+        // 2. Fetch Saved Items (Bookmarks)
+        const bookmarksSnap = await getDocs(collection(db, `users/${user.uid}/bookmarks`));
+        setSavedItems(bookmarksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -23,11 +70,16 @@ export const Profile = () => {
       console.error("Error signing out:", error);
     }
   };
+
   const stats = [
-    { label: t('profile.stats.topics'), value: '4', sub: t('profile.stats.completed') },
-    { label: t('profile.stats.steps'), value: '28', sub: t('profile.stats.learned') },
-    { label: t('profile.stats.progress'), value: '65%', sub: t('profile.stats.global') },
+    { label: t('profile.stats.topics'), value: realStats.topicsCompleted.toString(), sub: t('profile.stats.completed') },
+    { label: t('profile.stats.steps'), value: realStats.stepsLearned.toString(), sub: t('profile.stats.learned') },
+    { label: t('profile.stats.progress'), value: `${realStats.overallProgress}%`, sub: t('profile.stats.global') },
   ];
+
+  if (loading) {
+    return <PageSkeleton />;
+  }
 
   return (
     <div className="bg-neo-bg min-h-full pb-10">
@@ -39,7 +91,7 @@ export const Profile = () => {
           <div className="w-24 h-24 rounded-2xl bg-white border-3 border-black flex items-center justify-center shadow-neo overflow-hidden p-1">
             <img 
               src={user?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.uid || 'Riyansh'}`} 
-              alt="Avatar" 
+              alt={t('common.avatarAlt')} 
               className="w-full h-full object-cover rounded-xl"
             />
           </div>
@@ -70,20 +122,23 @@ export const Profile = () => {
       </SectionWrapper>
 
       {/* Saved Section */}
-      <SectionWrapper title={t('profile.savedItems')} actionLabel={t('common.viewAll')}>
+      <SectionWrapper title={t('profile.savedItems')} actionLabel={savedItems.length > 0 ? t('common.viewAll') : ''}>
         <div className="flex flex-col gap-4">
-          {[
-            { title: t('profile.saved.idReq'), date: t('profile.saved.days2') },
-            { title: t('profile.saved.pollDay'), date: t('profile.saved.days5') }
-          ].map((item) => (
-            <div key={item.title} className="flex items-center justify-between p-4 bg-white border-3 border-black rounded-2xl shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer">
+          {savedItems.map((item) => (
+            <div 
+              key={item.id} 
+              onClick={() => navigate(`/learn?topic=${item.topicId}&step=${item.stepIndex}`)}
+              className="flex items-center justify-between p-4 bg-white border-3 border-black rounded-2xl shadow-neo hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all cursor-pointer"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-neo-purple border-2 border-black flex items-center justify-center text-black shadow-neo-sm">
                   <Bookmark size={20} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h4 className="text-base font-black text-black uppercase tracking-tight leading-none">{item.title}</h4>
-                  <p className="text-xs font-bold text-gray-500 mt-2">{item.date}</p>
+                  <h4 className="text-base font-black text-black uppercase tracking-tight leading-none">{t(item.title)}</h4>
+                  <p className="text-xs font-bold text-gray-500 mt-2">
+                    {new Date(item.savedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
                 </div>
               </div>
               <div className="w-8 h-8 rounded-full bg-neo-yellow border-2 border-black flex items-center justify-center shadow-neo-sm">
@@ -91,13 +146,19 @@ export const Profile = () => {
               </div>
             </div>
           ))}
+          
+          {savedItems.length === 0 && (
+            <div className="p-8 text-center bg-gray-50/50 rounded-2xl border-2 border-dashed border-black/10">
+              <p className="text-sm font-bold text-black/40 uppercase tracking-widest">{t('profile.noSavedItems')}</p>
+            </div>
+          )}
         </div>
       </SectionWrapper>
 
       {/* Language Selection */}
       <SectionWrapper title={t('profile.lang')}>
         <div className="flex flex-wrap gap-3 mt-2">
-          {['English', 'Hindi (हिंदी)', 'Hinglish', 'Bengali (বাংলা)', 'Telugu (తెలుగు)', 'Marathi (मराठी)', 'Tamil (தமிழ்)', 'Gujarati (ગુજરાતી)', 'Kannada (ಕನ್ನಡ)'].map((lang) => (
+          {LANGUAGE_OPTIONS.map((lang) => (
             <button 
               key={lang}
               onClick={() => setLanguage(lang as any)}
@@ -136,10 +197,10 @@ export const Profile = () => {
           {/* Sync Data Option */}
           <div 
             onClick={async () => {
-              const ok = confirm("Refresh all educational content from server?");
+              const ok = confirm(t('common.syncConfirm'));
               if (ok) {
                 await seedDatabase();
-                alert("Data synced successfully!");
+                alert(t('common.syncSuccess'));
                 window.location.reload();
               }
             }}
