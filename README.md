@@ -1,73 +1,70 @@
-# React + TypeScript + Vite
+# Vote Sathi 🇮🇳
+**Empowering Indian Citizens through Election Education & AI**
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Vote Sathi is a premium, mobile-first web application designed to bridge the gap between Indian citizens and the electoral process. By combining modern design aesthetics with cutting-edge AI, it provides a seamless experience for voter registration, education, and real-time assistance.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Live Demo
+- **Cloud Run URL:** [https://votesathi-910017619357.asia-south1.run.app](https://votesathi-910017619357.asia-south1.run.app)
+- **Firebase Hosting:** [https://votesathi.web.app](https://votesathi.web.app)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🎯 Chosen Vertical
+**Civic Engagement & Election Education**
+The project focuses on making complex election procedures accessible to every citizen, regardless of their tech-savviness or language barriers.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Tech Stack & Google Services
+This project leverages the power of Google Cloud and Firebase to ensure high performance, security, and scalability:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Google Gemini AI (Pro 1.5):** Powers the "AI Assistant" to provide accurate, hallucination-free answers about Indian election laws, procedures, and dates.
+- **Firebase Authentication:** Secure user onboarding using Google Sign-In.
+- **Cloud Firestore:** Real-time database for managing user profiles and tracking educational progress.
+- **Google Cloud Run:** Containerized deployment for the application frontend, ensuring high availability and global scalability.
+- **Firebase Hosting:** Global CDN for fast static asset delivery.
+- **React + Vite:** Modern frontend framework for a lightning-fast user experience.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 💡 Approach and Logic
+### 1. User-Centric Design (Neo-Brutalist)
+We adopted a high-contrast **Neo-Brutalist** design system. Why? Because it stands out, is highly accessible due to bold outlines and clear typography, and provides a "premium" feel that builds trust with users.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Multi-Language Localization
+Recognizing India's diversity, the app supports **English, Hindi, and Bengali**. The logic uses a custom `LanguageContext` to manage translations across the entire application state dynamically.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 3. Progressive Learning Modules
+Instead of overwhelming users with data, we broke down election procedures into small, manageable modules. Users can track their progress through a custom-built progress tracking system synced with Firestore.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 4. AI-Driven Assistance
+Instead of a static FAQ, the Gemini-powered assistant acts as a real-time helper. We implemented strict system instructions to ensure the AI remains focused solely on Indian election topics, preventing off-topic hallucinations.
+
+---
+
+## 🛡️ Security & Quality
+- **Responsible AI:** Strict system prompts are used with Gemini to ensure ethical and accurate information sharing.
+- **Clean Architecture:** Modular component structure for easy maintenance and scalability.
+- **Efficiency:** Optimized bundle sizes and lazy-loading components to ensure the app runs smoothly even on slow networks.
+- **Accessibility:** High-contrast colors and semantic HTML to ensure usability for everyone.
+
+---
+
+## 📋 Assumptions Made
+- Users have access to basic internet connectivity.
+- External ECI service links provided are stable and officially maintained.
+- Users are accessing the application primarily via mobile devices for the best experience.
+
+---
+
+## 🏗️ How to Run Locally
+1. Clone the repo: `git clone https://github.com/RiyanshSingh/VoteSathi.git`
+2. Install dependencies: `npm install`
+3. Add your Firebase & Gemini API keys in `.env`
+4. Start development server: `npm run dev`
+
+---
+
+Created with ❤️ for the **Google Cloud & Hack2Skill Hackathon**.
