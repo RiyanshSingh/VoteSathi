@@ -265,7 +265,8 @@ export const Learn = () => {
           <Header 
             title={topic?.title ? t(topic.title) : t('nav.learn')} 
             subtitle={t('learn.selectStep')}
-            showBack 
+            showLogo={true}
+            titleSize="text-lg"
             onBack={() => navigate('/')} 
           />
           
@@ -332,7 +333,8 @@ export const Learn = () => {
         <Header 
           title={t('nav.learn')} 
           subtitle={t('learn.selectStep')}
-          showBack 
+          showLogo={true}
+          titleSize="text-lg"
           onBack={() => navigate('/')} 
         />
         
@@ -408,7 +410,8 @@ export const Learn = () => {
     <div className="bg-neo-bg min-h-full flex flex-col">
       <Header 
         title={topic?.titleKey ? t(topic.titleKey) : t('nav.learn')} 
-        showBack 
+        showLogo={true}
+        titleSize="text-lg"
         onBack={() => setViewMode('list')} 
       />
 

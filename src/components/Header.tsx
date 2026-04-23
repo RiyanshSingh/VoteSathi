@@ -5,14 +5,20 @@ interface HeaderProps {
   subtitle?: string;
   showBack?: boolean;
   onBack?: () => void;
+  showLogo?: boolean;
+  titleSize?: string;
 }
 
-export const Header = ({ title, subtitle, showBack, onBack }: HeaderProps) => {
+export const Header = ({ title, subtitle, showBack, onBack, showLogo, titleSize = "text-2xl" }: HeaderProps) => {
   return (
     <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] min-[1200px]:max-w-[406px] pt-6 pb-4 px-6 bg-neo-bg z-50">
       <div className="flex items-center justify-between">
         <div className="w-12 h-12 flex items-center justify-start">
-          {showBack ? (
+          {showLogo ? (
+            <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-neo-green border-3 border-black shadow-neo-sm text-black">
+              <Vote size={24} strokeWidth={3} />
+            </div>
+          ) : showBack ? (
             <button 
               onClick={onBack}
               className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white border-3 border-black shadow-neo-sm text-black active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
@@ -26,8 +32,8 @@ export const Header = ({ title, subtitle, showBack, onBack }: HeaderProps) => {
           )}
         </div>
         
-        <div className="flex flex-col items-center">
-          <h1 className="text-2xl font-black text-black leading-tight tracking-tight uppercase">{title}</h1>
+        <div className="flex flex-col items-center flex-1 px-2 text-center">
+          <h1 className={`${titleSize} font-black text-black leading-tight tracking-tight uppercase`}>{title}</h1>
           {subtitle && <p className="text-gray-500 font-bold mt-1 text-[11px] tracking-widest uppercase">{subtitle}</p>}
         </div>
 
