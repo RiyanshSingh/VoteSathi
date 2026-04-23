@@ -56,6 +56,10 @@ export const Login = () => {
         await sendEmailVerification(userCredential.user);
         setSuccess(t('auth.verificationSent'));
         await signOut(auth);
+        // Important: Stay on the page and clear form
+        setEmail('');
+        setPassword('');
+        setName('');
         setIsLogin(true);
         return;
       }

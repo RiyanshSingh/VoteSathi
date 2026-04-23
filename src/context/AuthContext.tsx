@@ -17,7 +17,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      // Only consider the user logged in if their email is verified
+      // Password provider users must verify, Google users are auto-verified
+      if (currentUser && !currentUser.emailVerified && currentUser.providerData.some(p => p.providerId === 'password')) {
+        setUser(null);
+      } else {
+        setUser(currentUser);
+      }
       setLoading(false);
     });
 
