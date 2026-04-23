@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { auth } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from 'firebase/auth';
 import { Button } from '../components/Button';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -14,6 +14,7 @@ export const Login = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const getAuthErrorMessage = (err: any) => {
     const code = err?.code as string | undefined;
@@ -26,6 +27,21 @@ export const Login = () => {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       navigate('/');
+    } catch (err: any) {
+      setError(getAuthErrorMessage(err));
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError(t('login.resetEmailError'));
+      return;
+    }
+    setError('');
+    setSuccess('');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setSuccess(t('login.resetEmailSent'));
     } catch (err: any) {
       setError(getAuthErrorMessage(err));
     }
@@ -74,6 +90,12 @@ export const Login = () => {
           </div>
         )}
 
+        {success && (
+          <div className="bg-neo-green border-3 border-black rounded-xl p-3 mb-4 font-bold text-sm shadow-neo-sm">
+            {success}
+          </div>
+        )}
+
         <form onSubmit={handleEmailAuth} className="flex flex-col gap-4 mb-6">
           {!isLogin && (
             <div>
@@ -112,6 +134,17 @@ export const Login = () => {
               required
             />
           </div>
+          {isLogin && (
+            <div className="flex justify-end -mt-2">
+              <button 
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-xs font-black uppercase underline decoration-2 underline-offset-2 decoration-neo-purple hover:text-neo-purple transition-colors"
+              >
+                {t('login.forgotPassword')}
+              </button>
+            </div>
+          )}
           <Button type="submit" className="w-full bg-neo-green mt-2 py-4 text-lg">
             {isLogin ? t('login.loginBtn') : t('login.signupBtn')}
           </Button>
