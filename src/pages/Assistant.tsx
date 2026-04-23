@@ -34,6 +34,10 @@ const SYSTEM_PROMPT = `You are VoteSathi AI, a strictly specialized assistant fo
 - STYLE: No introductory phrases, no conversational fillers. Start directly with the answer.
 - LIMIT: Max 150 words.`;
 
+/**
+ * @component
+ * @description The main AI Assistant page that handles multi-model inference (Groq/Gemini).
+ */
 export const Assistant = () => {
   const { language, t } = useLanguage();
   const { user } = useAuth();
@@ -141,6 +145,11 @@ export const Assistant = () => {
     }
   }, [location.state]);
 
+  /**
+   * Main function to handle AI inference with Groq and Gemini fallback.
+   * Manages message state, history, and error handling.
+   * @param text - The message string to send.
+   */
   const handleSendMessage = async (text: string = inputValue) => {
     if (!text.trim() || !user) return;
     
@@ -332,6 +341,7 @@ export const Assistant = () => {
             />
             <Button 
               className={`w-14 h-14 !p-0 rounded-2xl shrink-0 flex items-center justify-center transition-all ${!inputValue.trim() ? 'bg-gray-200 border-gray-400 opacity-50 cursor-not-allowed shadow-none' : 'bg-neo-yellow'}`}
+              aria-label={t('assistant.sendMessage')}
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim()}
             >

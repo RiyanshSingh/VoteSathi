@@ -448,6 +448,7 @@ export const Learn = () => {
                   <button 
                     onClick={toggleBookmark}
                     disabled={isSyncingBookmark}
+                    aria-label={isBookmarked ? t('learn.removeBookmark') : t('learn.addBookmark')}
                     className={`w-10 h-10 border-2 border-black rounded-xl flex items-center justify-center shadow-neo-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
                       ${isBookmarked ? 'bg-neo-yellow text-black' : 'bg-white text-black/30 hover:text-black'}`}
                   >
@@ -455,6 +456,7 @@ export const Learn = () => {
                   </button>
                   <button 
                     onClick={toggleAudio}
+                    aria-label={isPlaying ? t('learn.stopAudio') : t('learn.startAudio')}
                     className="w-10 h-10 bg-white border-2 border-black rounded-xl flex items-center justify-center text-black shadow-neo-sm active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                   >
                     {isPlaying ? <Square size={16} fill="currentColor" /> : <Volume2 size={18} strokeWidth={3} />}
