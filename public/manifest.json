@@ -1,0 +1,15 @@
+{
+  "short_name": "VoteSathi",
+  "name": "VoteSathi - Indian Election Guide",
+  "icons": [
+    {
+      "src": "/app-logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#FFD600",
+  "background_color": "#F0F0F0"
+}
