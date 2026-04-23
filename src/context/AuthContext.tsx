@@ -19,11 +19,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       // Only consider the user logged in if their email is verified
       // Password provider users must verify, Google users are auto-verified
-      if (currentUser && !currentUser.emailVerified && currentUser.providerData.some(p => p.providerId === 'password')) {
-        setUser(null);
-      } else {
-        setUser(currentUser);
+      if (currentUser && !currentUser.emailVerified) {
+        // If they are password users, they MUST be verified
+        const isPasswordUser = currentUser.providerData.some(p => p.providerId === 'password');
+        if (isPasswordUser) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
       }
+      setUser(currentUser);
       setLoading(false);
     });
 

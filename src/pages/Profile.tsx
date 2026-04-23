@@ -27,6 +27,15 @@ export const Profile = () => {
   });
   const [savedItems, setSavedItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profileImg, setProfileImg] = useState<string>('');
+
+  useEffect(() => {
+    if (user?.photoURL) {
+      setProfileImg(user.photoURL);
+    } else {
+      setProfileImg(`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.uid || 'Riyansh'}`);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -88,11 +97,14 @@ export const Profile = () => {
       {/* User Card */}
       <SectionWrapper>
         <Card variant="gradient" className="flex items-center gap-6 py-8">
-          <div className="w-24 h-24 rounded-2xl bg-white border-3 border-black flex items-center justify-center shadow-neo overflow-hidden p-1">
+          <div className="w-24 h-24 rounded-2xl bg-white border-3 border-black flex items-center justify-center shadow-neo overflow-hidden p-1 relative">
             <img 
-              src={user?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.uid || 'Riyansh'}`} 
+              src={profileImg} 
               alt={t('common.avatarAlt')} 
               className="w-full h-full object-cover rounded-xl"
+              onError={() => {
+                setProfileImg(`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.uid || 'Riyansh'}`);
+              }}
             />
           </div>
           <div className="flex-1">

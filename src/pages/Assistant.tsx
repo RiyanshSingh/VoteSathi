@@ -12,14 +12,23 @@ import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 
 import { aiKnowledge } from '../data/aiKnowledge';
 import { getCanonicalSuggestionChip } from '../lib/contentLocalization';
 import { suggestionChips as fallbackChips, initialMessages } from '../data/mockData';
 
-// AI model logic - Using client-side Gemini to support Spark plan (free)
-const genAI = new GoogleGenerativeAI("AIzaSyA3JFwbsCZ8d-Wo4WB4LwPXuzmtxPuMDKo");
+// AI model logic
+const GEN_AI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const genAI = new GoogleGenerativeAI(GEN_AI_KEY);
+
+const SYSTEM_PROMPT = `You are VoteSathi AI, a strictly specialized assistant for Indian Elections.
+- YOUR SCOPE: Only answer questions related to the Indian Election Commission (ECI), voting process, voter registration, political systems in India, or election rules.
+- OFF-TOPIC POLICY: If the user asks about anything else (general knowledge, science, entertainment, sports, coding, etc.), you MUST strictly respond with: "I am specialized only in the Indian election process. Please ask me about voting, voter ID, or ECI services."
+- FORMAT: 3-4 bullet points with **bold** highlights.
+- STYLE: No introductory phrases, no conversational fillers. Start directly with the answer.
+- LIMIT: Max 150 words.`;
 
 export const Assistant = () => {
   const { language, t } = useLanguage();
@@ -35,16 +44,15 @@ export const Assistant = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef(true);
 
-  const model = useMemo(() => genAI.getGenerativeModel({ 
-    model: "gemini-flash-latest",
-    systemInstruction: `You are Vote Sathi AI, a helpful and informative election consultant for Indian Elections.
-    Your goal is to provide clear, accurate, and easy-to-understand answers.
-    - Do not use conversational filler or introductory phrases.
-    - Provide 3-4 well-explained bullet points with **bold** highlights.
-    - Keep your answer under 150 words.
-    - CRITICAL: You must ONLY answer questions related to the Indian Election Commission, voting process, political system, or election rules.
-    - CRITICAL: If the user asks something completely unrelated to elections, say: "I can only answer questions related to the Indian election process."
-    Always respond in: ${language}.`,
+  const geminiModel = useMemo(() => genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash",
+    systemInstruction: SYSTEM_PROMPT + `\nAlways respond in: ${language}.`,
+    safetySettings: [
+      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+    ],
     generationConfig: {
       maxOutputTokens: 800,
       temperature: 0.1,
@@ -87,27 +95,24 @@ export const Assistant = () => {
         collection(db, `users/${user.uid}/messages`),
         orderBy('createdAt', 'asc')
       );
-      const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const unsubscribe = onSnapshot(q, (snapshot) => {
         const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // If user has no message history, seed the welcome greeting
         if (msgs.length === 0) {
           const welcomeMsg = initialMessages[0];
-          try {
-            await addDoc(collection(db, `users/${user.uid}/messages`), {
-              sender: 'assistant',
-              text: welcomeMsg.text,
-              createdAt: serverTimestamp(),
-              timestamp: welcomeMsg.timestamp,
-            });
-          } catch (e) {
-            console.error("Error seeding welcome message:", e);
-            setLoading(false); // Ensure loader disappears even if seed fails
-          }
+          addDoc(collection(db, `users/${user.uid}/messages`), {
+            sender: 'assistant',
+            text: welcomeMsg.text,
+            createdAt: serverTimestamp(),
+            timestamp: welcomeMsg.timestamp,
+          }).catch(e => console.error("Error seeding:", e));
         } else {
           setMessages(msgs);
           setLoading(false);
         }
+      }, (error) => {
+        console.error("Firestore Snapshot Error:", error);
+        setLoading(false);
       });
       return () => unsubscribe();
     } else {
@@ -169,20 +174,76 @@ export const Assistant = () => {
       return;
     }
 
-    // 2. Fallback to Client-side AI if no local match
+    // 2. Try GROQ First (High Speed & Reliability)
     try {
-      // Prepare history for multi-turn chat
+      const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT + `\nAlways respond in: ${language}.` },
+            ...messages.slice(-4).map(m => ({
+              role: m.sender === 'user' ? 'user' : 'assistant',
+              content: m.text
+            })),
+            { role: "user", content: text }
+          ],
+          temperature: 0.1,
+          max_tokens: 800
+        })
+      });
+
+      if (!groqResponse.ok) throw new Error("Groq API failed");
+      
+      const groqData = await groqResponse.json();
+      const responseText = groqData.choices[0].message.content;
+
+      if (responseText) {
+        await addDoc(collection(db, `users/${user.uid}/messages`), {
+          sender: 'assistant',
+          text: responseText,
+          createdAt: serverTimestamp(),
+          timestamp: getTimestamp(),
+        });
+        setIsTyping(false);
+        return;
+      }
+    } catch (groqError) {
+      console.warn("Groq failed, falling back to Gemini:", groqError);
+    }
+
+    // 3. Fallback to Client-side Gemini
+    try {
+      // Limit history to last 4 messages to save tokens and avoid quota limits
       const history = messages
         .filter(m => m.text && typeof m.text === 'string' && m.text.trim().length > 0)
-        .slice(-6)
+        .slice(-4)
         .map(m => ({
           role: (m.sender === 'user' ? 'user' : 'model') as "user" | "model",
           parts: [{ text: m.text }]
         }));
 
-      const chat = model.startChat({ history });
-      const result = await chat.sendMessage(text);
-      const responseText = result.response.text();
+      // Retry logic (2 attempts total for Gemini)
+      let attempt = 0;
+      let responseText = "";
+      
+      while (attempt < 2) {
+        try {
+          const chat = geminiModel.startChat({ history });
+          const result = await chat.sendMessage(text);
+          responseText = result.response.text();
+          if (responseText) break;
+        } catch (e: any) {
+          attempt++;
+          console.warn(`Gemini Attempt ${attempt} failed:`, e);
+          if (attempt === 2) throw e;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
       
       await addDoc(collection(db, `users/${user.uid}/messages`), {
         sender: 'assistant',
@@ -191,7 +252,7 @@ export const Assistant = () => {
         timestamp: getTimestamp(),
       });
     } catch (error: any) {
-      console.error("AI Error:", error);
+      console.error("CRITICAL AI ERROR (Both Groq & Gemini failed):", error);
       const fallbackMsg = t('assistant.connectionError');
         
       await addDoc(collection(db, `users/${user.uid}/messages`), {
@@ -266,8 +327,9 @@ export const Assistant = () => {
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             />
             <Button 
-              className="w-14 h-14 !p-0 rounded-2xl shrink-0 flex items-center justify-center bg-neo-yellow" 
+              className={`w-14 h-14 !p-0 rounded-2xl shrink-0 flex items-center justify-center transition-all ${!inputValue.trim() ? 'bg-gray-200 border-gray-400 opacity-50 cursor-not-allowed shadow-none' : 'bg-neo-yellow'}`}
               onClick={() => handleSendMessage()}
+              disabled={!inputValue.trim()}
             >
               <Send size={24} strokeWidth={2.5} className="translate-x-[-1px] translate-y-[1px]" />
             </Button>
