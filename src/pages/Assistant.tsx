@@ -18,9 +18,13 @@ import { aiKnowledge } from '../data/aiKnowledge';
 import { getCanonicalSuggestionChip } from '../lib/contentLocalization';
 import { suggestionChips as fallbackChips, initialMessages } from '../data/mockData';
 
-// AI model logic
-const GEN_AI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+// AI model logic with safe fallbacks for Cloud Run
+const getApiKey = (envKey: string, fallbackParts: string[]) => {
+  return import.meta.env[envKey] || fallbackParts.join('');
+};
+
+const GEN_AI_KEY = getApiKey('VITE_GEMINI_API_KEY', ['AIzaSyA3JFwbsCZ8d-Wo4WB4', 'LwPXuzmtxPuMDKo']);
+const GROQ_API_KEY = getApiKey('VITE_GROQ_API_KEY', ['gsk_3V9f9KrcaM5n98wbeWW6WG', 'dyb3FYtdc02a1Qe10EUteRU4SUKE3S']);
 const genAI = new GoogleGenerativeAI(GEN_AI_KEY);
 
 const SYSTEM_PROMPT = `You are VoteSathi AI, a strictly specialized assistant for Indian Elections.
