@@ -1,94 +1,88 @@
-# Vote Sathi 🇮🇳
-**Empowering Indian Citizens through Election Education & AI**
+# 🗳️ VoteSathi - Empowering Every Voter
 
-Vote Sathi is a premium, mobile-first web application designed to bridge the gap between Indian citizens and the electoral process. By combining modern design aesthetics with cutting-edge AI, it provides a seamless experience for voter registration, education, and real-time assistance.
+[![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)](https://cloud.google.com/)
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
----
-
-## 🚀 Live Demo
-- **Cloud Run URL:** [https://votesathi-910017619357.asia-south1.run.app](https://votesathi-910017619357.asia-south1.run.app)
-- **Firebase Hosting:** [https://votesathi.web.app](https://votesathi.web.app)
+**VoteSathi** is a state-of-the-art educational platform designed to simplify the Indian election process. Built with a focus on accessibility, security, and performance, it leverages advanced AI and Google Cloud infrastructure to provide real-time assistance and localized learning content for citizens.
 
 ---
 
-## 🎖️ Evaluation Highlights
-To meet the highest standards of the hackathon, we focused on the following areas:
+## 🚀 Key Features
 
-### 1. Code Quality & Maintainability
-- **TypeScript:** Used throughout the project for static type checking and reducing runtime errors.
-- **Component-Based Architecture:** Modular UI components (Buttons, Cards, Modals) for high reusability.
-- **State Management:** Used React Context API for clean and efficient handling of Authentication and Language states.
-
-### 2. Security & Responsible AI
-- **Secure Authentication:** Implemented Firebase Auth with Google Provider.
-- **AI Guardrails:** Custom system prompts for Gemini Pro 1.5 to prevent hallucinations and ensure responses are strictly restricted to Indian Election guidelines.
-- **Environment Safety:** Built to handle sensitive API keys via environment variables.
-
-### 3. Efficiency & Performance
-- **Optimized Build:** Powered by Vite for lightning-fast bundling and HMR.
-- **Perceived Performance:** Integrated premium skeleton loaders to provide a smooth user experience during data fetching.
-- **Lightweight Containers:** Docker image optimized with `nginx:alpine` to ensure minimal footprint on Cloud Run.
-
-### 4. Accessibility & Inclusive Design
-- **Neo-Brutalist UI:** High-contrast color palettes and bold typography to ensure readability for users with varying visual needs.
-- **Multi-lingual Support:** Native support for English, Hindi, and Bengali to include non-English speaking citizens.
+- **Dual-Core AI Assistant**: Powered by **Groq (Llama 3)** for ultra-fast responses, with a seamless fallback to **Google Gemini Pro** via the Google Generative AI SDK.
+- **Interactive Learning Path**: Modular chapters covering everything from Voter Registration to Polling Day procedures.
+- **Multi-Lingual Support**: Full localization in **English, Hindi, Bengali**, and more, ensuring inclusivity across India.
+- **Progressive Web App (PWA)**: Installable on mobile and desktop for an app-like experience with offline capabilities.
+- **Smart Bookmarks & Progress Tracking**: Persistent data storage across devices using Firebase.
 
 ---
 
-## 🎯 Chosen Vertical
-**Civic Engagement & Election Education**
-The project focuses on making complex election procedures accessible to every citizen, regardless of their tech-savviness or language barriers.
+## ☁️ Powered by Google Cloud & Firebase
+
+VoteSathi utilizes the full power of the Google Cloud ecosystem to deliver a production-grade experience:
+
+- **Google Cloud Run**: Containerized deployment for scalable, high-performance hosting.
+- **Firebase Authentication**: Secure user login with Email/Password and Google OAuth.
+- **Cloud Firestore**: Real-time NoSQL database for user profiles, messages, and bookmarks.
+- **Firebase Analytics**: Real-time user engagement tracking and event logging.
+- **Firebase Performance Monitoring**: Deep insights into app speed and network latency.
+- **Google Generative AI (Gemini)**: Secondary AI engine for complex election-related queries.
+- **Cloud Functions**: (Internal) Automated content synchronization and housekeeping.
 
 ---
 
-## 🛠️ Tech Stack & Google Services
-This project leverages the power of Google Cloud and Firebase to ensure high performance, security, and scalability:
+## 🛡️ Security & Performance (AI-Hardened)
 
-- **Dual-AI Architecture (Groq + Gemini):** Uses Groq (Llama 3.3) as the primary engine for lightning-fast (sub-second) responses, with an automatic fallback to Google Gemini 1.5 Flash for maximum reliability.
-- **Firebase Authentication:** Secure user onboarding with mandatory **Email Verification** and custom **Password Reset** flows.
-- **Cloud Firestore:** Real-time database protected by **Granular Security Rules** to ensure 100% user data isolation.
-- **Google Cloud Run:** Containerized deployment for the application frontend, ensuring high availability and global scalability.
-- **Firebase Hosting:** Global CDN for fast static asset delivery.
-- **React + Vite:** Modern frontend framework for a lightning-fast user experience.
+To achieve maximum efficiency and security, the following were implemented:
 
----
-
-## 💡 Approach and Logic
-### 1. User-Centric Design (Neo-Brutalist)
-We adopted a high-contrast **Neo-Brutalist** design system. Why? Because it stands out, is highly accessible due to bold outlines and clear typography, and provides a "premium" feel that builds trust with users.
-
-### 2. Multi-Language Localization
-Recognizing India's diversity, the app supports **English, Hindi, and Bengali**. The logic uses a custom `LanguageContext` to manage translations across the entire application state dynamically.
-
-### 3. Progressive Learning Modules
-Instead of overwhelming users with data, we broke down election procedures into small, manageable modules. Users can track their progress through a custom-built progress tracking system synced with Firestore.
-
-### 4. AI-Driven Assistance
-Instead of a static FAQ, the Gemini-powered assistant acts as a real-time helper. We implemented strict system instructions to ensure the AI remains focused solely on Indian election topics, preventing off-topic hallucinations.
+- **Content Security Policy (CSP)**: Strict headers to prevent XSS and unauthorized API injections.
+- **Lazy Loading & Code Splitting**: Routes are loaded on-demand using `React.lazy` to minimize initial bundle size.
+- **Error Boundaries**: Global crash prevention layer for a seamless user experience.
+- **A11y (Accessibility)**: Full ARIA label coverage and semantic HTML for screen-reader compatibility.
+- **Firestore Security Rules**: Strict attribute-based access control (ABAC) to protect user data.
 
 ---
 
-## 🛡️ Security & Quality
-- **Responsible AI:** Strict system prompts are used with Gemini to ensure ethical and accurate information sharing.
-- **Clean Architecture:** Modular component structure for easy maintenance and scalability.
-- **Efficiency:** Optimized bundle sizes and lazy-loading components to ensure the app runs smoothly even on slow networks.
-- **Accessibility:** High-contrast colors and semantic HTML to ensure usability for everyone.
+## 🧪 Testing & Quality
+
+- **Unit Testing**: Powered by **Vitest** for reliable and fast testing of localization and utility logic.
+- **CI/CD Ready**: Configured for automated builds and validation.
+- **JSDoc Documentation**: Comprehensive code documentation for maintainability.
 
 ---
 
-## 📋 Assumptions Made
-- Users have access to basic internet connectivity.
-- External ECI service links provided are stable and officially maintained.
-- Users are accessing the application primarily via mobile devices for the best experience.
+## 🛠️ Tech Stack
+
+- **Frontend**: React 19, TypeScript, Vite
+- **Styling**: Neo-Brutalist CSS (Vanilla)
+- **Icons**: Lucide React
+- **Animations**: Framer Motion
+- **Testing**: Vitest
 
 ---
 
-## 🏗️ How to Run Locally
-1. Clone the repo: `git clone https://github.com/RiyanshSingh/VoteSathi.git`
-2. Install dependencies: `npm install`
-3. Add your Firebase & Gemini API keys in `.env`
-4. Start development server: `npm run dev`
+## 📖 How to Run Locally
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/RiyanshSingh/VoteSathi.git
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables in `.env`:
+   ```env
+   VITE_GEMINI_API_KEY=your_key
+   VITE_GROQ_API_KEY=your_key
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
 ---
 
-Created with ❤️ for the **Google Cloud & Hack2Skill Hackathon**.
+© 2026 VoteSathi Team. Dedicated to a more informed and democratic India. 🇮🇳
