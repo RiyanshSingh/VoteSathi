@@ -44,9 +44,9 @@ The project focuses on making complex election procedures accessible to every ci
 ## 🛠️ Tech Stack & Google Services
 This project leverages the power of Google Cloud and Firebase to ensure high performance, security, and scalability:
 
-- **Google Gemini AI (Pro 1.5):** Powers the "AI Assistant" to provide accurate, hallucination-free answers about Indian election laws, procedures, and dates.
-- **Firebase Authentication:** Secure user onboarding using Google Sign-In.
-- **Cloud Firestore:** Real-time database for managing user profiles and tracking educational progress.
+- **Dual-AI Architecture (Groq + Gemini):** Uses Groq (Llama 3.3) as the primary engine for lightning-fast (sub-second) responses, with an automatic fallback to Google Gemini 1.5 Flash for maximum reliability.
+- **Firebase Authentication:** Secure user onboarding with mandatory **Email Verification** and custom **Password Reset** flows.
+- **Cloud Firestore:** Real-time database protected by **Granular Security Rules** to ensure 100% user data isolation.
 - **Google Cloud Run:** Containerized deployment for the application frontend, ensuring high availability and global scalability.
 - **Firebase Hosting:** Global CDN for fast static asset delivery.
 - **React + Vite:** Modern frontend framework for a lightning-fast user experience.
