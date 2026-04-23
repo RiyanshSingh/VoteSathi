@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { auth } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendPasswordResetEmail } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut } from 'firebase/auth';
 import { Button } from '../components/Button';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -32,32 +32,32 @@ export const Login = () => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!email) {
-      setError(t('login.resetEmailError'));
-      return;
-    }
-    setError('');
-    setSuccess('');
-    try {
-      await sendPasswordResetEmail(auth, email);
-      setSuccess(t('login.resetEmailSent'));
-    } catch (err: any) {
-      setError(getAuthErrorMessage(err));
-    }
+  const handleForgotPassword = () => {
+    navigate('/forgot-password');
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (!userCredential.user.emailVerified) {
+          setError(t('auth.verifyEmail'));
+          await signOut(auth);
+          return;
+        }
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         if (name.trim()) {
           await updateProfile(userCredential.user, { displayName: name.trim() });
         }
+        await sendEmailVerification(userCredential.user);
+        setSuccess(t('auth.verificationSent'));
+        await signOut(auth);
+        setIsLogin(true);
+        return;
       }
       navigate('/');
     } catch (err: any) {

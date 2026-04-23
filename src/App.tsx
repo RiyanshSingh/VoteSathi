@@ -7,6 +7,7 @@ import { Assistant } from './pages/Assistant';
 import { Profile } from './pages/Profile';
 import { Welcome } from './pages/Welcome';
 import { Login } from './pages/Login';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { Settings } from './pages/Settings';
 import { useAuth } from './context/AuthContext';
 import { PageSkeleton } from './components/SkeletonLoader';
@@ -46,6 +47,7 @@ function App() {
         {/* Public Routes */}
         <Route path="/welcome" element={<PublicRoute><Welcome /></PublicRoute>} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
 
         {/* Protected Routes */}
         <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
