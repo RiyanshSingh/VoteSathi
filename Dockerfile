@@ -4,6 +4,14 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+# Add build arguments for Vite environment variables
+ARG VITE_GEMINI_API_KEY
+ARG VITE_GROQ_API_KEY
+
+# Set them as environment variables so Vite can pick them up during build
+ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
+ENV VITE_GROQ_API_KEY=$VITE_GROQ_API_KEY
+
 RUN npm run build
 
 # Stage 2: Serve the app with Nginx
