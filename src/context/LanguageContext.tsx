@@ -2378,6 +2378,14 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     loadLang();
   }, [user]);
 
+  // Update HTML lang attribute for Accessibility (A11y)
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const locale = getLanguageLocale(language);
+      document.documentElement.lang = locale;
+    }
+  }, [language]);
+
   const handleSetLanguage = async (lang: Language) => {
     setLanguage(lang);
     localStorage.setItem('vote-sathi-lang', lang);

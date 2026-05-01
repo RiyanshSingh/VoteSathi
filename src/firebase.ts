@@ -5,6 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getFunctions } from "firebase/functions";
 import { getPerformance } from "firebase/performance";
+import { getRemoteConfig } from "firebase/remote-config";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -24,5 +25,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const functions = getFunctions(app);
 const perf = typeof window !== 'undefined' ? getPerformance(app) : null;
+const remoteConfig = typeof window !== 'undefined' ? getRemoteConfig(app) : null;
 
-export { app, analytics, db, auth, functions, perf };
+export { app, analytics, db, auth, functions, perf, remoteConfig };

@@ -5,7 +5,18 @@ import { Card } from '../components/Card';
 import { ProgressBar } from '../components/ProgressBar';
 import { Button } from '../components/Button';
 import { PageSkeleton } from '../components/SkeletonLoader';
-import * as Icons from 'lucide-react';
+import {
+  HelpCircle, AlertCircle, UserPlus, Search, Download,
+  Edit3, MapPin, AlertTriangle, ExternalLink,
+  BookOpen, Vote, BarChart2, CheckSquare
+} from 'lucide-react';
+
+// Icon map for dynamic topic icons from Firestore
+const ICON_MAP: Record<string, React.ElementType> = {
+  BookOpen, Vote, BarChart2, CheckSquare,
+  HelpCircle, AlertCircle, UserPlus, Search,
+  Download, Edit3, MapPin, AlertTriangle, ExternalLink,
+};
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -112,7 +123,7 @@ export const Home = () => {
       <SectionWrapper title={t('home.topics')}>
         <div className="grid grid-cols-2 gap-4">
           {topicsList.map((topic) => {
-            const IconComponent = (Icons[topic.icon as keyof typeof Icons] || Icons.HelpCircle) as React.ElementType;
+            const IconComponent = (ICON_MAP[topic.icon] || HelpCircle) as React.ElementType;
             return (
               <Card 
                 key={topic.id} 
@@ -174,7 +185,7 @@ export const Home = () => {
                 <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full w-fit shadow-neo-sm border-2 border-black ${news.isUrgent ? 'bg-white text-black' : 'bg-neo-yellow text-black'}`}>
                   {t(news.date)}
                 </span>
-                {news.isUrgent && <Icons.AlertCircle size={16} strokeWidth={3} className="text-black" />}
+                {news.isUrgent && <AlertCircle size={16} strokeWidth={3} className="text-black" />}
               </div>
               <h3 className="font-black text-black text-lg tracking-tight leading-tight mt-1">{t(news.title)}</h3>
               <p className="text-xs font-bold text-black/70 line-clamp-2">{t(news.description)}</p>
@@ -191,42 +202,42 @@ export const Home = () => {
               key: 'service.voter_reg', 
               descKey: 'service.voter_reg_desc', 
               url: 'https://voters.eci.gov.in/',
-              icon: Icons.UserPlus,
+              icon: UserPlus,
               color: 'bg-neo-blue'
             }, 
             { 
               key: 'service.check_list', 
               descKey: 'service.check_list_desc', 
               url: 'https://electoralsearch.eci.gov.in/',
-              icon: Icons.Search,
+              icon: Search,
               color: 'bg-neo-yellow'
             }, 
             { 
               key: 'service.download_epic', 
               descKey: 'service.download_epic_desc', 
               url: 'https://voters.eci.gov.in/',
-              icon: Icons.Download,
+              icon: Download,
               color: 'bg-neo-green'
             },
             { 
               key: 'service.update_details', 
               descKey: 'service.update_details_desc', 
               url: 'https://voters.eci.gov.in/',
-              icon: Icons.Edit3,
+              icon: Edit3,
               color: 'bg-neo-purple'
             },
             { 
               key: 'service.find_booth', 
               descKey: 'service.find_booth_desc', 
               url: 'https://electoralsearch.eci.gov.in/',
-              icon: Icons.MapPin,
+              icon: MapPin,
               color: 'bg-neo-pink'
             },
             { 
               key: 'service.file_complaint', 
               descKey: 'service.file_complaint_desc', 
               url: 'https://c-vigil.eci.gov.in/',
-              icon: Icons.AlertTriangle,
+              icon: AlertTriangle,
               color: 'bg-red-400'
             }
           ].map((service) => (
@@ -247,7 +258,7 @@ export const Home = () => {
                 </div>
               </div>
               <div className="w-8 h-8 flex items-center justify-center rounded-full bg-white border-2 border-black shadow-neo-sm shrink-0 group-hover:scale-110 transition-transform">
-                <Icons.ExternalLink size={16} strokeWidth={3} className="text-black" />
+                <ExternalLink size={16} strokeWidth={3} className="text-black" />
               </div>
             </a>
           ))}
